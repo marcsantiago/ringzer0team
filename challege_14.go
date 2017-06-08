@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/levigross/grequests"
@@ -12,13 +13,24 @@ import (
 	"./auth"
 )
 
+func binToString(s []byte) string {
+	output := make([]byte, len(s)/8)
+	for i := 0; i < len(output); i++ {
+		val, err := strconv.ParseInt(string(s[i*8:(i+1)*8]), 2, 64)
+		if err == nil {
+			output[i] = byte(val)
+		}
+	}
+	return string(output)
+}
+
 func main() {
 	c, err := auth.GetSess()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	res, err := c.Session.Get("https://ringzer0team.com/challenges/13", nil)
+	res, err := c.Session.Get("https://ringzer0team.com/challenges/14", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,12 +50,19 @@ func main() {
 	)
 	// clean up
 	pem = strings.TrimSpace(r.Replace(pem))
+	fmt.Println(pem)
+	// binary to text
+	pem = binToString([]byte(pem))
+	fmt.Printf("\n\n")
+	fmt.Println(pem)
+
 	// hash
 	h512 := sha512.New()
 	io.WriteString(h512, pem)
 	ans := fmt.Sprintf("%x", h512.Sum(nil))
 	// get flag page
-	u := fmt.Sprintf("https://ringzer0team.com/challenges/13/%s", ans)
+	u := fmt.Sprintf("https://ringzer0team.com/challenges/14/%s", ans)
+	// fmt.Println(u)
 	res, err = c.Session.Get(u, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -60,8 +79,8 @@ func main() {
 		log.Fatalln(err)
 	}
 	// post the flag back
-	data := map[string]string{"id": "13", "flag": flag, "check": "false", "csrf": csrfToken}
-	res, err = c.Session.Post("https://ringzer0team.com/challenges/13", &grequests.RequestOptions{
+	data := map[string]string{"id": "14", "flag": flag, "check": "false", "csrf": csrfToken}
+	res, err = c.Session.Post("https://ringzer0team.com/challenges/14", &grequests.RequestOptions{
 		Data: data,
 	})
 	html = res.String()
