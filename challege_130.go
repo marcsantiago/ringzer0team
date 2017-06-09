@@ -21,6 +21,7 @@ var (
 	sshRe      = regexp.MustCompile(`<div\s*class="download">.+"ssh:\/\/([^"]+)`)
 )
 
+// KeyPrint ...
 func KeyPrint(dialAddr string, addr net.Addr, key ssh.PublicKey) error {
 	fmt.Printf("%s %s %s\n", strings.Split(dialAddr, ":")[0], key.Type(), base64.StdEncoding.EncodeToString(key.Marshal()))
 	return nil
@@ -89,6 +90,8 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	// ---------------------------------
+
 	modes := ssh.TerminalModes{
 		ssh.ECHO:          0,     // disable echoing
 		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
@@ -118,10 +121,11 @@ func main() {
 	}
 	go io.Copy(os.Stderr, stderr)
 
-	err = session.Run("")
+	go session.Start("")
+	for {
+		stdin.Write([]byte("10000000\n"))
+		break
+	}
+	session.Wait()
 
-	// stdin.Write([]byte("10000"))
-	// panic(err)
-	n, err := fmt.Fprint(stdin, "1")
-	log.Fatalln(n, err)
 }
