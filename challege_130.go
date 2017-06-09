@@ -27,6 +27,18 @@ func KeyPrint(dialAddr string, addr net.Addr, key ssh.PublicKey) error {
 	return nil
 }
 
+/* Guessing algo
+int a = 1, b = n, guess = average of previous answers;
+while(guess is wrong) {
+
+    if(guess lower than answer) {a = guess;}
+    else if(guess higher than answer) {b = guess;}
+
+    guess = (a+b)/2;
+
+} //Go back to while
+*/
+
 func main() {
 	c, err := auth.GetSess()
 	if err != nil {
