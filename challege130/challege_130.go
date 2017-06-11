@@ -15,7 +15,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"./auth"
+	"../auth"
 )
 
 var (
