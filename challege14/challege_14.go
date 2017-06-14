@@ -50,11 +50,10 @@ func main() {
 	)
 	// clean up
 	pem = strings.TrimSpace(r.Replace(pem))
-	fmt.Println(pem)
+
 	// binary to text
 	pem = binToString([]byte(pem))
 	fmt.Printf("\n\n")
-	fmt.Println(pem)
 
 	// hash
 	h512 := sha512.New()
