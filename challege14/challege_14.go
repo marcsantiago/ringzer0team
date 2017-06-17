@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/levigross/grequests"
-
 	"../auth"
 )
 
@@ -25,7 +23,7 @@ func binToString(s []byte) string {
 }
 
 func main() {
-	c, err := auth.GetSess()
+	c, err := auth.NewSession()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,38 +51,10 @@ func main() {
 
 	// binary to text
 	pem = binToString([]byte(pem))
-	fmt.Printf("\n\n")
 
 	// hash
 	h512 := sha512.New()
 	io.WriteString(h512, pem)
 	ans := fmt.Sprintf("%x", h512.Sum(nil))
-	// get flag page
-	u := fmt.Sprintf("https://ringzer0team.com/challenges/14/%s", ans)
-	// fmt.Println(u)
-	res, err = c.Session.Get(u, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// parse flag
-	html = res.String()
-	flag, err := c.GetFlag(html)
-	if err != nil {
-		log.Fatalln("Couldn't find flag in html")
-	}
-
-	csrfToken, err := c.GetCSRF(html)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// post the flag back
-	data := map[string]string{"id": "14", "flag": flag, "check": "false", "csrf": csrfToken}
-	res, err = c.Session.Post("https://ringzer0team.com/challenges/14", &grequests.RequestOptions{
-		Data: data,
-	})
-	html = res.String()
-	if strings.Contains(html, "Wrong flag try harder!") {
-		log.Fatalln("Wrong answer")
-	}
-	log.Println("Answer seems correct")
+	c.SubmitAnswer("14", ans)
 }

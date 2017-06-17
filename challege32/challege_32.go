@@ -7,15 +7,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/levigross/grequests"
-
 	"../auth"
 )
 
 var parseEquation = regexp.MustCompile(`(\d+)\s*\+\s*0x([0-9-a-z]+)\s*-\s*(\d+)`)
 
 func main() {
-	c, err := auth.GetSess()
+	c, err := auth.NewSession()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,29 +40,5 @@ func main() {
 		b, _ = strconv.ParseInt(m[3], 2, 64)
 	}
 	answer := d + h - b
-	res, err = c.Session.Get(fmt.Sprintf("https://ringzer0team.com/challenges/32/%d", answer), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	html = res.String()
-	flag, err := c.GetFlag(html)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	csrfToken, err := c.GetCSRF(html)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// post the flag back
-	data := map[string]string{"id": "32", "flag": flag, "check": "false", "csrf": csrfToken}
-	res, err = c.Session.Post("https://ringzer0team.com/challenges/32", &grequests.RequestOptions{
-		Data: data,
-	})
-	html = res.String()
-	if strings.Contains(html, "Wrong flag try harder!") {
-		log.Fatalln("Wrong answer")
-	}
-	log.Println("Answer seems correct")
+	c.SubmitAnswer("32", fmt.Sprintf("%d", answer))
 }

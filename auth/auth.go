@@ -35,7 +35,7 @@ type Client struct {
 }
 
 // GetFlag ...
-func (c Client) GetFlag(html string) (flag string, err error) {
+func GetFlag(html string) (flag string, err error) {
 	m := parseFlag.FindStringSubmatch(html)
 	if len(m) == 2 {
 		flag = m[1]
@@ -48,7 +48,7 @@ func (c Client) GetFlag(html string) (flag string, err error) {
 }
 
 // GetCSRF ...
-func (c Client) GetCSRF(html string) (csrf string, err error) {
+func GetCSRF(html string) (csrf string, err error) {
 	m := parseCSRF.FindStringSubmatch(html)
 	if len(m) == 2 {
 		csrf = m[1]
@@ -60,8 +60,8 @@ func (c Client) GetCSRF(html string) (csrf string, err error) {
 	return
 }
 
-// GetSess ...
-func GetSess() (c Client, err error) {
+// NewSession ...
+func NewSession() (c Client, err error) {
 	cj, _ := cookiejar.New(nil)
 
 	c.Session = grequests.NewSession(&grequests.RequestOptions{
@@ -91,7 +91,7 @@ func GetSess() (c Client, err error) {
 		return
 	}
 	html := string(res.String())
-	csrfToken, errTemp := c.GetCSRF(html)
+	csrfToken, errTemp := GetCSRF(html)
 	if err != nil {
 		err = errTemp
 		return
@@ -115,4 +115,38 @@ func GetSess() (c Client, err error) {
 		return
 	}
 	return
+}
+
+// SubmitAnswer ...
+func (c Client) SubmitAnswer(challegeNumber, answer string) {
+	page := "https://ringzer0team.com/challenges"
+	// get flag page
+	flagURL := fmt.Sprintf("%s/%s/%s", page, challegeNumber, answer)
+	postURL := fmt.Sprintf("%s/%s", page, challegeNumber)
+
+	res, err := c.Session.Get(flagURL, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// parse flag
+	html := res.String()
+	flag, err := GetFlag(html)
+	if err != nil {
+		log.Fatalln("Couldn't find flag in html")
+	}
+	csrfToken, err := GetCSRF(html)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// post the flag back
+	data := map[string]string{"id": challegeNumber, "flag": flag, "check": "false", "csrf": csrfToken}
+	res, err = c.Session.Post(postURL, &grequests.RequestOptions{
+		Data: data,
+	})
+	html = res.String()
+	if strings.Contains(html, "Wrong flag try harder!") {
+		log.Fatalln("Wrong answer")
+	}
+	log.Println("Answer seems correct")
+
 }

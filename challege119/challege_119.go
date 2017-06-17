@@ -5,9 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/levigross/grequests"
-
-	"./auth"
+	"../auth"
 )
 
 var (
@@ -22,7 +20,7 @@ var (
 )
 
 func main() {
-	c, err := auth.GetSess()
+	c, err := auth.NewSession()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,32 +71,5 @@ func main() {
 		}
 	}
 
-	u := fmt.Sprintf("https://ringzer0team.com/challenges/119/%s", num)
-	fmt.Println(u)
-	res, err = c.Session.Get(u, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// parse flag
-	html = res.String()
-	flag, err := c.GetFlag(html)
-	if err != nil {
-		log.Fatalln("Couldn't find flag in html")
-	}
-
-	csrfToken, err := c.GetCSRF(html)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// post the flag back
-	d := map[string]string{"id": "119", "flag": flag, "check": "false", "csrf": csrfToken}
-	res, err = c.Session.Post("https://ringzer0team.com/challenges/119", &grequests.RequestOptions{
-		Data: d,
-	})
-	html = res.String()
-	if strings.Contains(html, "Wrong flag try harder!") {
-		log.Fatalln("Wrong answer")
-	}
-	log.Println("Answer seems correct")
-
+	c.SubmitAnswer("119", num)
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"sort"
 	"strings"
@@ -157,7 +156,7 @@ func main() {
 		wordSet[clean] = true
 	}
 
-	c, err := auth.GetSess()
+	c, err := auth.NewSession()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -203,35 +202,7 @@ func main() {
 	if len(testWords) != len(possbleWords) {
 		log.Fatalf("Length of words from site: %d doesn't match the length of words matched: %d", len(testWords), len(possbleWords))
 	}
-
 	answer := strings.Join(possbleWords, ",")
-
-	u := fmt.Sprintf("https://ringzer0team.com/challenges/126/%s", answer)
-	fmt.Println(u)
-	res, err = c.Session.Get(u, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// parse flag
-	html = res.String()
-	flag, err := c.GetFlag(html)
-	if err != nil {
-		log.Fatalln("Couldn't find flag in html")
-	}
-
-	csrfToken, err := c.GetCSRF(html)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// post the flag back
-	d := map[string]string{"id": "126", "flag": flag, "check": "false", "csrf": csrfToken}
-	res, err = c.Session.Post("https://ringzer0team.com/challenges/126", &grequests.RequestOptions{
-		Data: d,
-	})
-	html = res.String()
-	if strings.Contains(html, "Wrong flag try harder!") {
-		log.Fatalln("Wrong answer")
-	}
-	log.Println("Answer seems correct")
+	c.SubmitAnswer("126", answer)
 
 }

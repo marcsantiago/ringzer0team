@@ -63,11 +63,10 @@ func newAlgo() *algo {
 }
 
 func main() {
-	c, err := auth.GetSess()
+	c, err := auth.NewSession()
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	res, err := c.Session.Get("https://ringzer0team.com/challenges/130", nil)
 	if err != nil {
 		log.Fatal(err)
@@ -85,8 +84,6 @@ func main() {
 
 	}
 
-	// user = "number"
-	// password = "Z7IwIMRC2dc764L"
 	if user == "" || password == "" {
 		log.Fatalln("Couldn't parse user and password out of html")
 	}
@@ -96,7 +93,6 @@ func main() {
 	if len(m) == 2 {
 		connStr = m[1]
 	}
-	// connStr = "ringzer0team.com:12643"
 
 	if !strings.Contains(connStr, ":") {
 		log.Fatalln("Missing port")
@@ -180,7 +176,7 @@ func main() {
 			g := driver.run(true)
 			stdin.Write([]byte(g))
 		}
-		f, err := c.GetFlag(lines)
+		f, err := auth.GetFlag(lines)
 		if err == nil {
 			flag = f
 			break
@@ -191,7 +187,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	csrfToken, err := c.GetCSRF(html)
+	csrfToken, err := auth.GetCSRF(html)
 	if err != nil {
 		log.Fatalln(err)
 	}

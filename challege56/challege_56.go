@@ -3,12 +3,9 @@ package main
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
-
-	"github.com/levigross/grequests"
 
 	"../auth"
 )
@@ -21,7 +18,7 @@ func main() {
 		hashes[h] = i
 	}
 
-	c, err := auth.GetSess()
+	c, err := auth.NewSession()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,33 +50,5 @@ func main() {
 	} else {
 		log.Fatalln("not in hash map")
 	}
-
-	u := fmt.Sprintf("https://ringzer0team.com/challenges/56/%s", answer)
-	res, err = c.Session.Get(u, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// parse flag
-	html = res.String()
-	flag, err := c.GetFlag(html)
-	if err != nil {
-		log.Fatalln("Couldn't find flag in html")
-	}
-
-	csrfToken, err := c.GetCSRF(html)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// post the flag back
-	data := map[string]string{"id": "56", "flag": flag, "check": "false", "csrf": csrfToken}
-	res, err = c.Session.Post("https://ringzer0team.com/challenges/56", &grequests.RequestOptions{
-		Data: data,
-	})
-	html = res.String()
-	if strings.Contains(html, "Wrong flag try harder!") {
-		log.Fatalln("Wrong answer")
-	}
-	log.Println("Answer seems correct")
-
+	c.SubmitAnswer("56", answer)
 }
