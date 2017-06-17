@@ -14,8 +14,8 @@ var (
 		"xx  x x    x    x  xxxxx":     "1",
 		"xxx x   x   xx  x   xxxxx":    "2",
 		"xxx x   x  xx x   x xxx":      "3",
+		"x   xx    x xxxxx     x    x": "4",
 		"xxxxxx     xxxx    xxxxxx":    "5",
-		"x   xx    x xxxxx     x    x": "9",
 	}
 )
 
@@ -70,6 +70,5 @@ func main() {
 			rawN = ""
 		}
 	}
-
 	c.SubmitAnswer("119", num)
 }
