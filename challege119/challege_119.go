@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -55,12 +54,10 @@ func main() {
 	for _, line := range strings.Split(code, "\n") {
 		if strings.Contains(line, "x") {
 			counter++
-			rawN += line + "\n"
+			rawN += line
 		}
 		if counter == 5 {
-			// remove the trim stuff later using it because i'm printing it with newline for testing
-			fmt.Println(rawN)
-			key := strings.TrimSpace(strings.Replace(rawN, "\n", "", -1))
+			key := strings.TrimSpace(rawN)
 			if val, ok := nMap[key]; ok {
 				num += val
 			} else {
