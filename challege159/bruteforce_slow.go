@@ -33,6 +33,7 @@ func generateCombinations(alphabet string, length int) <-chan string {
 // AddLetter adds a letter to the combination to create a new combination.
 // This new combination is passed on to the channel before we call AddLetter once again
 // to add yet another letter to the new combination in case length allows it
+// this would create somthing like a 17.414258688 GB file and also 17.414258688 in memory... so use at your own risk
 func addLetter(c chan string, combo string, alphabet string, length int) {
 	// Check if we reached the length limit
 	// If so, we just return without adding anything
@@ -70,5 +71,4 @@ func main() {
 			}
 		}
 	}
-
 }
