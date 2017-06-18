@@ -2,8 +2,11 @@ package main
 
 import (
 	"crypto/sha1"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 )
 
 func generateCombinations(alphabet string, length int) <-chan string {
@@ -38,14 +41,20 @@ func addLetter(c chan string, combo string, alphabet string, length int) {
 func main() {
 	// known length of password is 6 characters
 	// abcdefghijklmnopqrstuvwxyz0123456789
+	// uses alot of memory...potentilly also lots of disk drive space
+	hashMap := make(map[string]string)
 	for perm := range generateCombinations("abcdefghijklmnopqrstuvwxyz0123456789", 6) {
 		h1 := sha1.New()
-		// fmt.Println(perm)
 		io.WriteString(h1, perm)
 		h := fmt.Sprintf("%x", h1.Sum(nil))
-		if h == "58066ab1f1ffb482737dd9162b35d9cdad5f86c8" { //spzedg
-			fmt.Println(perm)
-			break
-		}
+		hashMap[h] = perm
+	}
+	b, err := json.MarshalIndent(hashMap, "", "")
+	if err != nil {
+		log.Fatalln("could not marshal data")
+	}
+	err = ioutil.WriteFile("hashmap.json", b, 0666)
+	if err != nil {
+		log.Fatalln("could not write file")
 	}
 }
