@@ -1,13 +1,22 @@
 package main
 
 import (
-	"crypto/sha1"
 	"encoding/json"
-	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
+	"sync"
 )
+
+type set struct {
+	Hash map[string]error
+	Mtx  sync.Mutex
+}
+
+var mySet set
+
+func init() {
+	mySet.Hash = make(map[string]error)
+}
 
 func generateCombinations(alphabet string, length int) <-chan string {
 	c := make(chan string)
@@ -33,28 +42,33 @@ func addLetter(c chan string, combo string, alphabet string, length int) {
 	var newCombo string
 	for _, ch := range alphabet {
 		newCombo = combo + string(ch)
-		c <- newCombo
+		mySet.Mtx.Lock()
+		if _, ok := mySet.Hash[newCombo]; !ok {
+			mySet.Hash[newCombo] = nil
+			c <- newCombo
+		} else {
+			c <- newCombo
+		}
+		mySet.Mtx.Unlock()
 		addLetter(c, newCombo, alphabet, length-1)
 	}
 }
 
 func main() {
-	// known length of password is 6 characters
-	// abcdefghijklmnopqrstuvwxyz0123456789
-	// uses alot of memory...potentilly also lots of disk drive space
-	hashMap := make(map[string]string)
-	for perm := range generateCombinations("abcdefghijklmnopqrstuvwxyz0123456789", 6) {
-		h1 := sha1.New()
-		io.WriteString(h1, perm)
-		h := fmt.Sprintf("%x", h1.Sum(nil))
-		hashMap[h] = perm
+	for {
+		select {
+		case c := <-generateCombinations("abcdefghijklmnopqrstuvwxyz0123456789", 6):
+			_ = c
+		default:
+			b, err := json.MarshalIndent(mySet.Hash, "", "")
+			if err != nil {
+				log.Fatalln("could not marshal data")
+			}
+			err = ioutil.WriteFile("hashmap.json", b, 0666)
+			if err != nil {
+				log.Fatalln("could not write file")
+			}
+		}
 	}
-	b, err := json.MarshalIndent(hashMap, "", "")
-	if err != nil {
-		log.Fatalln("could not marshal data")
-	}
-	err = ioutil.WriteFile("hashmap.json", b, 0666)
-	if err != nil {
-		log.Fatalln("could not write file")
-	}
+
 }
