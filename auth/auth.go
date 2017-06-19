@@ -118,7 +118,7 @@ func NewSession() (c Client, err error) {
 }
 
 // SubmitAnswer ...
-func (c Client) SubmitAnswer(challegeNumber, answer string) {
+func (c Client) SubmitAnswer(challegeNumber, answer string) (err error) {
 	page := "https://ringzer0team.com/challenges"
 	// get flag page
 	flagURL := fmt.Sprintf("%s/%s/%s", page, challegeNumber, answer)
@@ -126,17 +126,18 @@ func (c Client) SubmitAnswer(challegeNumber, answer string) {
 
 	res, err := c.Session.Get(flagURL, nil)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
+
 	// parse flag
 	html := res.String()
 	flag, err := GetFlag(html)
 	if err != nil {
-		log.Fatalln("Couldn't find flag in html")
+		return
 	}
 	csrfToken, err := GetCSRF(html)
 	if err != nil {
-		log.Fatalln(err)
+		return
 	}
 	// post the flag back
 	data := map[string]string{"id": challegeNumber, "flag": flag, "check": "false", "csrf": csrfToken}
@@ -145,8 +146,8 @@ func (c Client) SubmitAnswer(challegeNumber, answer string) {
 	})
 	html = res.String()
 	if strings.Contains(html, "Wrong flag try harder!") {
-		log.Fatalln("Wrong answer")
+		return fmt.Errorf("Answer seems wrong")
 	}
 	log.Println("Answer seems correct")
-
+	return nil
 }
