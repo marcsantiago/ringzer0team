@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/color"
 	"image/jpeg"
 	"image/png"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/levigross/grequests"
+	"github.com/nfnt/resize"
 	"github.com/otiai10/gosseract"
 )
 
@@ -70,12 +72,6 @@ func decrypt(hash string) (pass string, err error) {
 	}
 	res.DownloadToFile("cap.JPEG")
 
-	// how you would convert using imagemagic on a mac
-	// cmd := "mogrify"
-	// args := []string{"-format", "png", "*.JPEG"}
-	// if err := exec.Command(cmd, args...).Run(); err != nil {
-	// 	log.Fatalln("couldn't convert to bmp")
-	// }
 	jpegFile, err := os.Open("cap.JPEG")
 	if err != nil {
 		log.Fatalln(err)
@@ -86,7 +82,6 @@ func decrypt(hash string) (pass string, err error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	// grey scale the image
 	bounds := imgJ.Bounds()
 	w, h := bounds.Max.X, bounds.Max.Y
@@ -98,14 +93,25 @@ func decrypt(hash string) (pass string, err error) {
 
 		}
 	}
-
+	// clean it up some more
+	clean := image.NewRGBA64(image.Rectangle{Max: image.Point{w, h}})
+	for x := 0; x < w; x++ {
+		for y := 0; y < h; y++ {
+			var rgba = gray.At(x, y)
+			r, g, b, _ := rgba.RGBA()
+			if int(r/257) < 70 && int(g/257) < 70 && int(b/257) < 70 {
+				clean.Set(x, y, color.Black)
+			} else {
+				clean.Set(x, y, color.Transparent)
+			}
+		}
+	}
+	newImage := resize.Resize(uint(float64(w)*1.5), uint(float64(h)*1.5), clean, resize.NearestNeighbor)
 	var buf bytes.Buffer
-	err = png.Encode(&buf, gray)
+	err = png.Encode(&buf, newImage)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	// ioutil.WriteFile("cap.png", buf.Bytes(), 0666)
-	// remove after converting
 	os.Remove("cap.JPEG")
 
 	orc, err := gosseract.NewClient()
@@ -118,6 +124,8 @@ func decrypt(hash string) (pass string, err error) {
 	}
 	client := orc.Image(image)
 	pass, err = client.Out()
+	pass = strings.TrimSpace(pass)
+	// ioutil.WriteFile("tst.png", buf.Bytes(), 0666)
 	return
 }
 
